@@ -13,4 +13,11 @@ abstract class TestCase extends BaseTestCase
             $this->markTestSkipped($message ?? "Fortify feature [{$feature}] is not enabled.");
         }
     }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config()->set('view.paths', [resource_path('views')]);
+    }
 }

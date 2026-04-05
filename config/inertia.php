@@ -1,6 +1,31 @@
 <?php
 
+$pagePaths = [
+    resource_path('js/pages'),
+];
+
+$pageExtensions = [
+    'js',
+    'jsx',
+    'svelte',
+    'ts',
+    'tsx',
+    'vue',
+];
+
 return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Initial page (Inertia.js v2+ / @inertiajs/vue3)
+    |--------------------------------------------------------------------------
+    |
+    | O cliente Vue 3 lê a página inicial de <script type="application/json" data-page>.
+    | Sem isto, o Blade antigo (<div data-page>) deixa getInitialPageFromDOM a null → tela em branco.
+    |
+    */
+
+    'use_script_element_for_initial_page' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -16,37 +41,31 @@ return [
     */
 
     'ssr' => [
-        'enabled' => true,
-        'url' => 'http://127.0.0.1:13714',
+        'enabled' => (bool) env('INERTIA_SSR_ENABLED', false),
+        'url' => env('INERTIA_SSR_URL', 'http://127.0.0.1:13714'),
         // 'bundle' => base_path('bootstrap/ssr/ssr.mjs'),
 
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Pages
+    | Pages (filesystem discovery for Inertia)
     |--------------------------------------------------------------------------
     |
-    | These options configure how Inertia discovers page components on the
-    | filesystem. The paths and extensions are used to locate components
-    | when rendering responses and during testing assertions.
+    | Root keys page_paths / page_extensions are used by inertia-laravel.
+    | The `pages` array mirrors the same values for clarity in one place.
     |
     */
 
+    'page_paths' => $pagePaths,
+
+    'page_extensions' => $pageExtensions,
+
     'pages' => [
 
-        'paths' => [
-            resource_path('js/pages'),
-        ],
+        'paths' => $pagePaths,
 
-        'extensions' => [
-            'js',
-            'jsx',
-            'svelte',
-            'ts',
-            'tsx',
-            'vue',
-        ],
+        'extensions' => $pageExtensions,
 
     ],
 
@@ -55,15 +74,18 @@ return [
     | Testing
     |--------------------------------------------------------------------------
     |
-    | The values described here are used to locate Inertia components on the
-    | filesystem. For instance, when using `assertInertia`, the assertion
-    | attempts to locate the component as a file relative to the paths.
+    | Must include page_paths and page_extensions: a short `testing` array alone
+    | replaces the package defaults entirely and breaks assertInertia (null paths).
     |
     */
 
     'testing' => [
 
         'ensure_pages_exist' => true,
+
+        'page_paths' => $pagePaths,
+
+        'page_extensions' => $pageExtensions,
 
     ],
 

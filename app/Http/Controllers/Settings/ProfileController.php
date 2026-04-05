@@ -5,24 +5,52 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Fortify\Features;
 
-class ProfileController extends Controller
+class ProfileController extends Controller implements HasMiddleware
 {
+    /**
+     * Get the middleware that should be assigned to the controller.
+     */
+    public static function middleware(): array
+    {
+        return Features::canManageTwoFactorAuthentication()
+            && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword')
+                ? [new Middleware('password.confirm', only: ['edit'])]
+                : [];
+    }
+
     /**
      * Show the user's profile settings page.
      */
-    public function edit(Request $request): Response
+    public function edit(TwoFactorAuthenticationRequest $request): Response
     {
-        return Inertia::render('settings/Profile', [
+        $props = [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
-        ]);
+            'canManageTwoFactor' => Features::canManageTwoFactorAuthentication(),
+        ];
+
+        if (Features::canManageTwoFactorAuthentication()) {
+            $request->ensureStateIsValid();
+
+            $user = $request->user();
+            $props['twoFactorEnabled'] = $user->hasEnabledTwoFactorAuthentication();
+            $props['requiresConfirmation'] = Features::optionEnabled(Features::twoFactorAuthentication(), 'confirm');
+            $props['pendingTwoFactorConfirmation'] = $props['requiresConfirmation']
+                && $user->two_factor_secret
+                && $user->two_factor_confirmed_at === null;
+        }
+
+        return Inertia::render('settings/Profile', $props);
     }
 
     /**

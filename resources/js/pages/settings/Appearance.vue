@@ -1,32 +1,13 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import AppearanceTabs from '@/components/AppearanceTabs.vue';
-import Heading from '@/components/Heading.vue';
-import { edit } from '@/routes/appearance';
-
-defineOptions({
-    layout: {
-        breadcrumbs: [
-            {
-                title: 'Appearance settings',
-                href: edit(),
-            },
-        ],
-    },
-});
+import { Head, Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <Head title="Appearance settings" />
+    <Head title="Aparência" />
 
-    <h1 class="sr-only">Appearance settings</h1>
-
-    <div class="space-y-6">
-        <Heading
-            variant="small"
-            title="Appearance settings"
-            description="Update your account's appearance settings"
-        />
-        <AppearanceTabs />
+    <div class="space-y-4 p-6">
+        <h1 class="text-xl font-semibold">Aparência</h1>
+        <p class="text-sm text-neutral-600">Tema claro / escuro pode ser ligado ao composable existente.</p>
+        <Link class="text-sm text-blue-600" href="/settings/profile">Voltar ao perfil</Link>
     </div>
 </template>

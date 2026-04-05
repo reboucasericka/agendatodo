@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Form, Head, setLayoutProps } from '@inertiajs/vue3';
-import { computed, ref, watchEffect } from 'vue';
+import { Form, Head } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,13 +30,6 @@ const authConfigContent = computed<TwoFactorConfigContent>(() => {
     };
 });
 
-watchEffect(() => {
-    setLayoutProps({
-        title: authConfigContent.value.title,
-        description: authConfigContent.value.description,
-    });
-});
-
 const showRecoveryInput = ref<boolean>(false);
 
 const toggleRecoveryMode = (clearErrors: () => void): void => {
@@ -49,7 +42,7 @@ const code = ref<string>('');
 </script>
 
 <template>
-    <Head title="Two-factor authentication" />
+    <Head :title="authConfigContent.title" />
 
     <div class="space-y-6">
         <template v-if="!showRecoveryInput">
@@ -90,7 +83,7 @@ const code = ref<string>('');
                     <span>or you can </span>
                     <button
                         type="button"
-                        class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                        class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current!"
                         @click="() => toggleRecoveryMode(clearErrors)"
                     >
                         {{ authConfigContent.buttonText }}
@@ -122,7 +115,7 @@ const code = ref<string>('');
                     <span>or you can </span>
                     <button
                         type="button"
-                        class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                        class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current!"
                         @click="() => toggleRecoveryMode(clearErrors)"
                     >
                         {{ authConfigContent.buttonText }}

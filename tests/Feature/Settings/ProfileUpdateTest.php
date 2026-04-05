@@ -7,6 +7,7 @@ test('profile page is displayed', function () {
 
     $response = $this
         ->actingAs($user)
+        ->withSession(['auth.password_confirmed_at' => time()])
         ->get(route('profile.edit'));
 
     $response->assertOk();

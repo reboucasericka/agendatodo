@@ -1,125 +1,259 @@
-<script setup lang="ts">
-import { Form, Head, Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
-import DeleteUser from '@/components/DeleteUser.vue';
-import Heading from '@/components/Heading.vue';
+<script setup>
 import InputError from '@/components/InputError.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { edit } from '@/routes/profile';
-import { send } from '@/routes/verification';
-
-type Props = {
-    mustVerifyEmail: boolean;
-    status?: string;
-};
-
-defineProps<Props>();
+import InputLabel from '@/components/InputLabel.vue';
+import PrimaryButton from '@/components/PrimaryButton.vue';
+import TextInput from '@/components/TextInput.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { computed, onMounted, ref, watch } from 'vue';
 
 defineOptions({
-    layout: {
-        breadcrumbs: [
-            {
-                title: 'Profile settings',
-                href: edit(),
-            },
-        ],
-    },
+    layout: AppLayout,
 });
 
 const page = usePage();
-const user = computed(() => page.props.auth.user);
+const user = page.props.auth?.user;
+
+const props = defineProps({
+    mustVerifyEmail: {
+        type: Boolean,
+        default: false,
+    },
+    canManageTwoFactor: {
+        type: Boolean,
+        default: false,
+    },
+    twoFactorEnabled: {
+        type: Boolean,
+        default: false,
+    },
+    requiresConfirmation: {
+        type: Boolean,
+        default: false,
+    },
+    pendingTwoFactorConfirmation: {
+        type: Boolean,
+        default: false,
+    },
+});
+
+const passwordForm = useForm({
+    current_password: '',
+    password: '',
+    password_confirmation: '',
+});
+
+const submitPassword = () => {
+    passwordForm.put('/user/password', {
+        preserveScroll: true,
+        errorBag: 'updatePassword',
+        onSuccess: () => passwordForm.reset(),
+    });
+};
+
+const enableForm = useForm({});
+const disableForm = useForm({});
+const confirmForm = useForm({ code: '' });
+
+const enableTwoFactor = () => {
+    enableForm.post('/user/two-factor-authentication', {
+        preserveScroll: true,
+    });
+};
+
+const disableTwoFactor = () => {
+    if (!confirm('Desativar a autenticação de dois fatores?')) {
+        return;
+    }
+    disableForm.delete('/user/two-factor-authentication', {
+        preserveScroll: true,
+    });
+};
+
+const submitConfirm = () => {
+    confirmForm.post('/user/confirmed-two-factor-authentication', {
+        preserveScroll: true,
+        onSuccess: () => {
+            confirmForm.reset();
+            qrSvg.value = null;
+            recoveryCodes.value = [];
+        },
+    });
+};
+
+function xsrfToken() {
+    const row = document.cookie.split('; ').find((c) => c.startsWith('XSRF-TOKEN='));
+    return row ? decodeURIComponent(row.split('=').slice(1).join('=')) : '';
+}
+
+async function fetchJson(url) {
+    const res = await fetch(url, {
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-XSRF-TOKEN': xsrfToken(),
+        },
+        credentials: 'same-origin',
+    });
+    if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+    }
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+}
+
+const qrSvg = ref(null);
+const recoveryCodes = ref([]);
+
+async function loadQrCode() {
+    if (!props.canManageTwoFactor) {
+        return;
+    }
+    try {
+        const data = await fetchJson('/user/two-factor-qr-code');
+        qrSvg.value = data?.svg ?? null;
+    } catch {
+        qrSvg.value = null;
+    }
+}
+
+async function loadRecoveryCodes() {
+    if (
+        !props.canManageTwoFactor ||
+        (!props.twoFactorEnabled && !props.pendingTwoFactorConfirmation)
+    ) {
+        recoveryCodes.value = [];
+        return;
+    }
+    try {
+        const data = await fetchJson('/user/two-factor-recovery-codes');
+        recoveryCodes.value = Array.isArray(data) ? data : [];
+    } catch {
+        recoveryCodes.value = [];
+    }
+}
+
+onMounted(() => {
+    if (props.pendingTwoFactorConfirmation) {
+        loadQrCode();
+        loadRecoveryCodes();
+    } else if (props.twoFactorEnabled) {
+        loadRecoveryCodes();
+    }
+});
+
+watch(
+    () => [props.pendingTwoFactorConfirmation, props.twoFactorEnabled],
+    () => {
+        if (props.pendingTwoFactorConfirmation) {
+            loadQrCode();
+            loadRecoveryCodes();
+        } else if (props.twoFactorEnabled) {
+            qrSvg.value = null;
+            loadRecoveryCodes();
+        } else {
+            qrSvg.value = null;
+            recoveryCodes.value = [];
+        }
+    },
+);
+
+const flashStatus = computed(() => page.props.flash?.status ?? page.props.status ?? null);
 </script>
 
 <template>
-    <Head title="Profile settings" />
+    <Head title="Perfil" />
 
-    <h1 class="sr-only">Profile settings</h1>
+    <div class="max-w-4xl mx-auto space-y-8">
+        <div>
+            <h1 class="text-2xl font-semibold text-white">Perfil</h1>
+            <p class="text-gray-400 text-sm">
+                Informações da conta, palavra-passe e autenticação de dois fatores
+            </p>
 
-    <div class="flex flex-col space-y-6">
-        <Heading
-            variant="small"
-            title="Profile information"
-            description="Update your name and email address"
-        />
+            <p v-if="flashStatus" class="text-green-400 mt-2">
+                {{ flashStatus }}
+            </p>
+        </div>
 
-        <Form
-            v-bind="ProfileController.update.form()"
-            class="space-y-6"
-            v-slot="{ errors, processing, recentlySuccessful }"
-        >
-            <div class="grid gap-2">
-                <Label for="name">Name</Label>
-                <Input
-                    id="name"
-                    class="mt-1 block w-full"
-                    name="name"
-                    :default-value="user.name"
-                    required
-                    autocomplete="name"
-                    placeholder="Full name"
-                />
-                <InputError class="mt-2" :message="errors.name" />
+        <section class="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
+            <h2 class="text-lg font-medium text-white">Informações</h2>
+
+            <div>
+                <p class="text-gray-400 text-sm">Nome</p>
+                <p class="text-white">{{ user?.name }}</p>
             </div>
 
-            <div class="grid gap-2">
-                <Label for="email">Email address</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    name="email"
-                    :default-value="user.email"
-                    required
-                    autocomplete="username"
-                    placeholder="Email address"
-                />
-                <InputError class="mt-2" :message="errors.email" />
+            <div>
+                <p class="text-gray-400 text-sm">Email</p>
+                <p class="text-white">{{ user?.email }}</p>
             </div>
+        </section>
 
-            <div v-if="mustVerifyEmail && !user.email_verified_at">
-                <p class="-mt-4 text-sm text-muted-foreground">
-                    Your email address is unverified.
-                    <Link
-                        :href="send()"
-                        as="button"
-                        class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
-                    >
-                        Click here to resend the verification email.
-                    </Link>
-                </p>
+        <section class="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
+            <h2 class="text-lg font-medium text-white">Alterar palavra-passe</h2>
 
-                <div
-                    v-if="status === 'verification-link-sent'"
-                    class="mt-2 text-sm font-medium text-green-600"
-                >
-                    A new verification link has been sent to your email address.
+            <form class="space-y-4" @submit.prevent="submitPassword">
+                <div>
+                    <InputLabel value="Palavra-passe atual" />
+                    <TextInput
+                        v-model="passwordForm.current_password"
+                        type="password"
+                        class="mt-1 w-full bg-gray-800 border-gray-700 text-white"
+                    />
+                    <InputError :message="passwordForm.errors.current_password" />
                 </div>
+
+                <div>
+                    <InputLabel value="Nova palavra-passe" />
+                    <TextInput
+                        v-model="passwordForm.password"
+                        type="password"
+                        class="mt-1 w-full bg-gray-800 border-gray-700 text-white"
+                    />
+                    <InputError :message="passwordForm.errors.password" />
+                </div>
+
+                <div>
+                    <InputLabel value="Confirmar palavra-passe" />
+                    <TextInput
+                        v-model="passwordForm.password_confirmation"
+                        type="password"
+                        class="mt-1 w-full bg-gray-800 border-gray-700 text-white"
+                    />
+                    <InputError :message="passwordForm.errors.password_confirmation" />
+                </div>
+
+                <PrimaryButton> Guardar </PrimaryButton>
+            </form>
+        </section>
+
+        <section
+            v-if="canManageTwoFactor"
+            class="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4"
+        >
+            <h2 class="text-lg font-medium text-white">Autenticação 2FA</h2>
+
+            <p class="text-gray-400 text-sm">Segurança extra com Google Authenticator</p>
+
+            <div v-if="!twoFactorEnabled && !pendingTwoFactorConfirmation">
+                <PrimaryButton @click="enableTwoFactor"> Ativar 2FA </PrimaryButton>
             </div>
 
-            <div class="flex items-center gap-4">
-                <Button :disabled="processing" data-test="update-profile-button"
-                    >Save</Button
-                >
+            <div v-if="pendingTwoFactorConfirmation" class="space-y-4">
+                <div v-if="qrSvg" v-html="qrSvg" class="bg-white p-3 rounded" />
 
-                <Transition
-                    enter-active-class="transition ease-in-out"
-                    enter-from-class="opacity-0"
-                    leave-active-class="transition ease-in-out"
-                    leave-to-class="opacity-0"
-                >
-                    <p
-                        v-show="recentlySuccessful"
-                        class="text-sm text-neutral-600"
-                    >
-                        Saved.
-                    </p>
-                </Transition>
+                <form class="flex gap-3" @submit.prevent="submitConfirm">
+                    <TextInput v-model="confirmForm.code" />
+                    <PrimaryButton>Confirmar</PrimaryButton>
+                </form>
             </div>
-        </Form>
+
+            <div v-if="twoFactorEnabled" class="space-y-4">
+                <p class="text-green-400">2FA ativo</p>
+
+                <PrimaryButton @click="disableTwoFactor"> Desativar </PrimaryButton>
+            </div>
+        </section>
     </div>
-
-    <DeleteUser />
 </template>

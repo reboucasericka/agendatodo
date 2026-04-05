@@ -1,111 +1,100 @@
-<script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+<script setup>
+import Checkbox from '@/components/Checkbox.vue';
+import GuestLayout from '@/layouts/GuestLayout.vue';
 import InputError from '@/components/InputError.vue';
-import PasswordInput from '@/components/PasswordInput.vue';
-import TextLink from '@/components/TextLink.vue';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import { register } from '@/routes';
-import { store } from '@/routes/login';
-import { request } from '@/routes/password';
+import InputLabel from '@/components/InputLabel.vue';
+import PrimaryButton from '@/components/PrimaryButton.vue';
+import TextInput from '@/components/TextInput.vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 
-defineOptions({
-    layout: {
-        title: 'Log in to your account',
-        description: 'Enter your email and password below to log in',
+defineProps({
+    canResetPassword: {
+        type: Boolean,
+    },
+    status: {
+        type: String,
     },
 });
 
-defineProps<{
-    status?: string;
-    canResetPassword: boolean;
-    canRegister: boolean;
-}>();
+const form = useForm({
+    email: '',
+    password: '',
+    remember: false,
+});
+
+const submit = () => {
+    form.post('/login', {
+        onFinish: () => form.reset('password'),
+    });
+};
 </script>
 
 <template>
-    <Head title="Log in" />
+    <GuestLayout>
+        <Head title="Log in" />
 
-    <div
-        v-if="status"
-        class="mb-4 text-center text-sm font-medium text-green-600"
-    >
-        {{ status }}
-    </div>
+        <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
+            {{ status }}
+        </div>
 
-    <Form
-        v-bind="store.form()"
-        :reset-on-success="['password']"
-        v-slot="{ errors, processing }"
-        class="flex flex-col gap-6"
-    >
-        <div class="grid gap-6">
-            <div class="grid gap-2">
-                <Label for="email">Email address</Label>
-                <Input
+        <form @submit.prevent="submit">
+            <div>
+                <InputLabel for="email" value="Email" />
+
+                <TextInput
                     id="email"
                     type="email"
-                    name="email"
+                    class="mt-1 block w-full"
+                    v-model="form.email"
                     required
                     autofocus
-                    :tabindex="1"
-                    autocomplete="email"
-                    placeholder="email@example.com"
+                    autocomplete="username"
                 />
-                <InputError :message="errors.email" />
+
+                <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div class="grid gap-2">
-                <div class="flex items-center justify-between">
-                    <Label for="password">Password</Label>
-                    <TextLink
-                        v-if="canResetPassword"
-                        :href="request()"
-                        class="text-sm"
-                        :tabindex="5"
-                    >
-                        Forgot password?
-                    </TextLink>
-                </div>
-                <PasswordInput
+            <div class="mt-4">
+                <InputLabel for="password" value="Password" />
+
+                <TextInput
                     id="password"
-                    name="password"
+                    type="password"
+                    class="mt-1 block w-full"
+                    v-model="form.password"
                     required
-                    :tabindex="2"
                     autocomplete="current-password"
-                    placeholder="Password"
                 />
-                <InputError :message="errors.password" />
+
+                <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
-            <div class="flex items-center justify-between">
-                <Label for="remember" class="flex items-center space-x-3">
-                    <Checkbox id="remember" name="remember" :tabindex="3" />
-                    <span>Remember me</span>
-                </Label>
+            <div class="mt-4 block">
+                <label class="flex items-center">
+                    <Checkbox name="remember" v-model:checked="form.remember" />
+                    <span class="ms-2 text-sm text-gray-600"
+                        >Remember me</span
+                    >
+                </label>
             </div>
 
-            <Button
-                type="submit"
-                class="mt-4 w-full"
-                :tabindex="4"
-                :disabled="processing"
-                data-test="login-button"
-            >
-                <Spinner v-if="processing" />
-                Log in
-            </Button>
-        </div>
+            <div class="mt-4 flex items-center justify-end">
+                <Link
+                    v-if="canResetPassword"
+                    href="/forgot-password"
+                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                    Esqueceu a sua senha?
+                </Link>
 
-        <div
-            class="text-center text-sm text-muted-foreground"
-            v-if="canRegister"
-        >
-            Don't have an account?
-            <TextLink :href="register()" :tabindex="5">Sign up</TextLink>
-        </div>
-    </Form>
+                <PrimaryButton
+                    class="ms-4"
+                    :class="{ 'opacity-25': form.processing }"
+                    :disabled="form.processing"
+                >
+                    Entrar
+                </PrimaryButton>
+            </div>
+        </form>
+    </GuestLayout>
 </template>
