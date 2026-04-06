@@ -37,15 +37,23 @@ function toLocalIsoDate(d) {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
+
   return `${y}-${m}-${day}`
 }
 
 const todayIso = computed(() => toLocalIsoDate(new Date()))
 
 function taskDueIso(task) {
-  if (!task?.due_date) return null
+  if (!task?.due_date) {
+return null
+}
+
   const raw = task.due_date
-  if (typeof raw === 'string') return raw.slice(0, 10)
+
+  if (typeof raw === 'string') {
+return raw.slice(0, 10)
+}
+
   return null
 }
 
@@ -83,6 +91,7 @@ const weeks = computed(() => {
 
   const total = 42
   let next = 1
+
   while (cells.length < total) {
     const d = new Date(y, m + 1, next)
     cells.push({
@@ -94,9 +103,11 @@ const weeks = computed(() => {
   }
 
   const result = []
+
   for (let i = 0; i < cells.length; i += 7) {
     result.push(cells.slice(i, i + 7))
   }
+
   return result
 })
 
@@ -105,9 +116,16 @@ function tasksOnDay(iso) {
 }
 
 function meetingDateIso(m) {
-  if (!m?.meeting_date) return null
+  if (!m?.meeting_date) {
+return null
+}
+
   const raw = m.meeting_date
-  if (typeof raw === 'string') return raw.slice(0, 10)
+
+  if (typeof raw === 'string') {
+return raw.slice(0, 10)
+}
+
   return null
 }
 
@@ -116,8 +134,14 @@ function meetingsOnDay(iso) {
 }
 
 function meetingPillClass(m) {
-  if (m.status === 'completed') return 'bg-violet-950/90 text-violet-200 ring-1 ring-violet-500/40'
-  if (m.status === 'planning') return 'bg-fuchsia-950/80 text-fuchsia-200 ring-1 ring-fuchsia-500/35'
+  if (m.status === 'completed') {
+return 'bg-violet-950/90 text-violet-200 ring-1 ring-violet-500/40'
+}
+
+  if (m.status === 'planning') {
+return 'bg-fuchsia-950/80 text-fuchsia-200 ring-1 ring-fuchsia-500/35'
+}
+
   return 'bg-violet-600/90 text-white ring-1 ring-violet-400/50'
 }
 

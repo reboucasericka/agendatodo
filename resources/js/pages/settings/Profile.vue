@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { computed, onMounted, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import InputLabel from '@/components/InputLabel.vue';
 import PrimaryButton from '@/components/PrimaryButton.vue';
 import TextInput from '@/components/TextInput.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
 
 defineOptions({
     layout: AppLayout,
@@ -65,6 +65,7 @@ const disableTwoFactor = () => {
     if (!confirm('Desativar a autenticação de dois fatores?')) {
         return;
     }
+
     disableForm.delete('/user/two-factor-authentication', {
         preserveScroll: true,
     });
@@ -83,6 +84,7 @@ const submitConfirm = () => {
 
 function xsrfToken() {
     const row = document.cookie.split('; ').find((c) => c.startsWith('XSRF-TOKEN='));
+
     return row ? decodeURIComponent(row.split('=').slice(1).join('=')) : '';
 }
 
@@ -95,10 +97,13 @@ async function fetchJson(url) {
         },
         credentials: 'same-origin',
     });
+
     if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
     }
+
     const text = await res.text();
+
     return text ? JSON.parse(text) : null;
 }
 
@@ -109,6 +114,7 @@ async function loadQrCode() {
     if (!props.canManageTwoFactor) {
         return;
     }
+
     try {
         const data = await fetchJson('/user/two-factor-qr-code');
         qrSvg.value = data?.svg ?? null;
@@ -123,8 +129,10 @@ async function loadRecoveryCodes() {
         (!props.twoFactorEnabled && !props.pendingTwoFactorConfirmation)
     ) {
         recoveryCodes.value = [];
+
         return;
     }
+
     try {
         const data = await fetchJson('/user/two-factor-recovery-codes');
         recoveryCodes.value = Array.isArray(data) ? data : [];

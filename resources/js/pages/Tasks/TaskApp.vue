@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
 import { router, Link, usePage } from '@inertiajs/vue3'
+import { computed, ref, watch } from 'vue'
 
-import TaskForm from '@/features/Tasks/TaskForm.vue'
-import TaskCalendar from '@/features/Tasks/TaskCalendar.vue'
-import TaskListPanel from '@/features/Tasks/TaskListPanel.vue'
 import UserDropdown from '@/components/UserDropdown.vue'
+import TaskCalendar from '@/features/Tasks/TaskCalendar.vue'
+import TaskForm from '@/features/Tasks/TaskForm.vue'
+import TaskListPanel from '@/features/Tasks/TaskListPanel.vue'
 
 const props = defineProps({
   tasks: Array,
@@ -32,8 +32,15 @@ const user = computed(() => page.props.auth?.user ?? null)
 const isAuth = computed(() => !!page.props.auth?.user)
 const taskBasePath = computed(() => {
   const u = page.url || ''
-  if (u.startsWith('/tarefas/concluidas')) return '/tarefas/concluidas'
-  if (u.startsWith('/tarefas')) return '/tarefas'
+
+  if (u.startsWith('/tarefas/concluidas')) {
+return '/tarefas/concluidas'
+}
+
+  if (u.startsWith('/tarefas')) {
+return '/tarefas'
+}
+
   return '/app'
 })
 
@@ -59,6 +66,7 @@ function applySidebarSearch() {
 function handleSubmit(data) {
   loading.value = true
   const id = editingTask.value?.id
+
   if (id) {
     router.put(`/tasks/${id}`, data, {
       onFinish: () => {
@@ -93,6 +101,7 @@ function navClass(active) {
 /** Vista “limpa” da app (sem filtros de lista). */
 const isAppHomeActive = computed(() => {
   const f = props.filters
+
   return (
     f.view !== 'week'
     && f.status === 'pending'
@@ -103,12 +112,17 @@ const isAppHomeActive = computed(() => {
 
 const isMeetingsHistoryActive = computed(() => {
   const u = page.url || ''
-  if (!u.includes('reunioes')) return false
+
+  if (!u.includes('reunioes')) {
+return false
+}
+
   return u.includes('tab=completed')
 })
 
 const isTasksHistoryActive = computed(() => {
   const u = page.url || ''
+
   return u.startsWith('/tarefas/concluidas')
     || (props.filters.status === 'completed' && props.filters.view !== 'week')
 })

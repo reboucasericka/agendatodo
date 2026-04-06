@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import UserDropdown from '@/components/UserDropdown.vue'
 import { Head, Link } from '@inertiajs/vue3'
-import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
+import UserDropdown from '@/components/UserDropdown.vue'
 
-const props = defineProps({
+defineProps({
   tasks: {
     type: Array,
     default: () => [],
@@ -16,7 +16,10 @@ const user = computed(() => page.props.auth?.user ?? null)
 const isAuth = computed(() => !!page.props.auth?.user)
 
 function dueSlice(d) {
-  if (!d) return null
+  if (!d) {
+return null
+}
+
   return typeof d === 'string' ? d.slice(0, 10) : null
 }
 </script>

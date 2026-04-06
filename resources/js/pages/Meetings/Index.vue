@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
 import { router, Link, usePage } from '@inertiajs/vue3'
+import { computed, reactive, ref, watch } from 'vue'
 import UserDropdown from '@/components/UserDropdown.vue'
 
 const props = defineProps({
@@ -46,16 +46,29 @@ function participantClass(i) {
 }
 
 function statusPillClass(s) {
-  if (s === 'completed') return 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/40'
-  if (s === 'scheduled') return 'bg-sky-500/20 text-sky-300 ring-1 ring-sky-500/40'
+  if (s === 'completed') {
+return 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/40'
+}
+
+  if (s === 'scheduled') {
+return 'bg-sky-500/20 text-sky-300 ring-1 ring-sky-500/40'
+}
+
   return 'bg-zinc-500/25 text-zinc-300 ring-1 ring-zinc-500/40'
 }
 
 function formatPtDate(iso) {
-  if (!iso) return '—'
+  if (!iso) {
+return '—'
+}
+
   const s = typeof iso === 'string' ? iso.slice(0, 10) : iso
   const [y, m, d] = s.split('-')
-  if (!y || !m || !d) return s
+
+  if (!y || !m || !d) {
+return s
+}
+
   return `${d}/${m}/${y}`
 }
 
@@ -63,6 +76,7 @@ const displayedMeetings = computed(() => {
   if (props.tab === 'completed') {
     return props.meetings.filter((m) => m.status === 'completed')
   }
+
   return props.meetings
 })
 
@@ -72,12 +86,21 @@ function meetingsByStatus(status) {
 
 const calendarGroups = computed(() => {
   const map = new Map()
+
   for (const m of props.meetings) {
     const key = (m.meeting_date || '').slice(0, 7)
-    if (!key) continue
-    if (!map.has(key)) map.set(key, [])
+
+    if (!key) {
+continue
+}
+
+    if (!map.has(key)) {
+map.set(key, [])
+}
+
     map.get(key).push(m)
   }
+
   return [...map.entries()].sort(([a], [b]) => a.localeCompare(b))
 })
 
@@ -132,7 +155,10 @@ function submit() {
     ...form,
     redirect_tab: props.tab,
   }
-  const done = { onFinish: () => { loading.value = false } }
+  const done = { onFinish: () => {
+ loading.value = false 
+} }
+
   if (editingId.value) {
     router.put(`/reunioes/${editingId.value}`, payload, {
       ...done,
@@ -147,7 +173,10 @@ function submit() {
 }
 
 function removeMeeting(m) {
-  if (!window.confirm(`Eliminar "${m.title}"?`)) return
+  if (!window.confirm(`Eliminar "${m.title}"?`)) {
+return
+}
+
   const url = `/reunioes/${m.id}?${new URLSearchParams({ redirect_tab: props.tab }).toString()}`
   router.delete(url)
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { router } from '@inertiajs/vue3'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 // PROPS vindas do Inertia
 const props = defineProps({
@@ -30,8 +30,14 @@ function logout() {
 
 // FECHAR AO CLICAR FORA
 function onClickOutside(e) {
-  if (!dropdownRoot.value || !open.value) return
-  if (dropdownRoot.value.contains(e.target)) return
+  if (!dropdownRoot.value || !open.value) {
+return
+}
+
+  if (dropdownRoot.value.contains(e.target)) {
+return
+}
+
   open.value = false
 }
 

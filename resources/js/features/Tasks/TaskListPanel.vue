@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
+import { ref, watch } from 'vue'
 
 const props = defineProps({
   tasks: { type: Array, default: () => [] },
@@ -45,13 +45,22 @@ function applySearch() {
 const priorityLabel = { low: 'Baixa', medium: 'Média', high: 'Alta' }
 
 function priorityClass(p) {
-  if (p === 'high') return 'bg-red-500/20 text-red-300'
-  if (p === 'low') return 'bg-zinc-500/20 text-zinc-400'
+  if (p === 'high') {
+return 'bg-red-500/20 text-red-300'
+}
+
+  if (p === 'low') {
+return 'bg-zinc-500/20 text-zinc-400'
+}
+
   return 'bg-amber-500/20 text-amber-200'
 }
 
 function dueSlice(d) {
-  if (!d) return null
+  if (!d) {
+return null
+}
+
   return typeof d === 'string' ? d.slice(0, 10) : null
 }
 
@@ -59,6 +68,7 @@ function localYmd(d) {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
+
   return `${y}-${m}-${day}`
 }
 
@@ -69,29 +79,47 @@ function todayYmd() {
 function tomorrowYmd() {
   const t = new Date()
   t.setDate(t.getDate() + 1)
+
   return localYmd(t)
 }
 
 /** Destaque para vencimento hoje / amanhã (lista, incl. vista semanal). */
 function urgencyRowClass(task) {
   const slice = dueSlice(task.due_date)
-  if (!slice) return ''
+
+  if (!slice) {
+return ''
+}
+
   const t = todayYmd()
   const tm = tomorrowYmd()
+
   if (slice === t) {
     return 'border-l-2 border-l-red-500/80 bg-red-500/10'
   }
+
   if (slice === tm) {
     return 'border-l-2 border-l-amber-500/70 bg-amber-500/10'
   }
+
   return ''
 }
 
 function urgencyLabel(task) {
   const slice = dueSlice(task.due_date)
-  if (!slice) return null
-  if (slice === todayYmd()) return 'Hoje'
-  if (slice === tomorrowYmd()) return 'Amanhã'
+
+  if (!slice) {
+return null
+}
+
+  if (slice === todayYmd()) {
+return 'Hoje'
+}
+
+  if (slice === tomorrowYmd()) {
+return 'Amanhã'
+}
+
   return null
 }
 
@@ -101,9 +129,15 @@ function toggleTask(task, ev) {
 }
 
 function deleteTask(task) {
-  if (!window.confirm(`Eliminar a tarefa "${task.title}"?`)) return
+  if (!window.confirm(`Eliminar a tarefa "${task.title}"?`)) {
+return
+}
+
   router.delete(`/tasks/${task.id}`, { preserveScroll: true })
-  if (selectedId.value === task.id) selectedId.value = null
+
+  if (selectedId.value === task.id) {
+selectedId.value = null
+}
 }
 
 function selectTask(task) {

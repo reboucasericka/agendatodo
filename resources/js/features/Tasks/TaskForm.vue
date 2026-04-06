@@ -34,9 +34,11 @@ function normalizeDueDate(raw: string | null | undefined): string {
     if (raw == null || raw === '') {
         return '';
     }
+
     if (typeof raw === 'string') {
         return raw.length >= 10 ? raw.slice(0, 10) : raw;
     }
+
     return '';
 }
 
@@ -64,6 +66,7 @@ function validate(): boolean {
     if (!form.title.trim()) {
         errors.title = 'O titulo e obrigatorio.';
         nextTick(() => titleRef.value?.focus());
+
         return false;
     }
 
@@ -80,8 +83,13 @@ function resetForm() {
 }
 
 function submitForm() {
-    if (props.loading) return;
-    if (!validate()) return;
+    if (props.loading) {
+return;
+}
+
+    if (!validate()) {
+return;
+}
 
     emit('submit', {
         title: form.title.trim(),
