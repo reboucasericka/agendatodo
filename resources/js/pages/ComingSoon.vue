@@ -15,7 +15,7 @@ defineProps({
   <div class="min-h-screen bg-zinc-950 text-zinc-100">
     <div class="mx-auto max-w-lg px-6 py-16">
       <p class="text-xs font-medium uppercase tracking-wide text-zinc-500">
-        BossFlowX
+        AgendaToDo
       </p>
       <h1 class="mt-2 text-2xl font-semibold text-white">
         {{ title }}

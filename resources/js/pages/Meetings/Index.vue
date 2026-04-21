@@ -1,12 +1,33 @@
 <script setup lang="ts">
 import { router, Link, usePage } from '@inertiajs/vue3'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch  } from 'vue'
+import type {PropType} from 'vue';
 import UserDropdown from '@/components/UserDropdown.vue'
 
+type MeetingStatus = 'planning' | 'scheduled' | 'completed'
+type MeetingsTab = 'all' | 'kanban' | 'calendar' | 'list' | 'completed'
+
+type MeetingItem = {
+  id: number
+  title: string
+  meeting_date: string | null
+  meeting_time: string | null
+  status: MeetingStatus
+  duration: string | null
+  platform: string | null
+  participants: string[] | null
+}
+
+const meetingColumns: Array<{ key: MeetingStatus, label: string }> = [
+  { key: 'planning', label: 'Em planeamento' },
+  { key: 'scheduled', label: 'Agendadas' },
+  { key: 'completed', label: 'Concluídas' },
+]
+
 const props = defineProps({
-  meetings: { type: Array, default: () => [] },
-  upcoming: { type: Array, default: () => [] },
-  tab: { type: String, default: 'all' },
+  meetings: { type: Array as PropType<MeetingItem[]>, default: () => [] },
+  upcoming: { type: Array as PropType<MeetingItem[]>, default: () => [] },
+  tab: { type: String as PropType<MeetingsTab>, default: 'all' },
 })
 
 const page = usePage()
@@ -14,8 +35,8 @@ const user = computed(() => page.props.auth?.user ?? null)
 const isAuth = computed(() => !!page.props.auth?.user)
 
 const loading = ref(false)
-const formRoot = ref(null)
-const editingId = ref(null)
+const formRoot = ref<HTMLElement | null>(null)
+const editingId = ref<number | null>(null)
 
 const form = reactive({
   title: '',
@@ -41,11 +62,11 @@ const badgeColors = [
   'bg-emerald-500/25 text-emerald-200 border-emerald-500/30',
 ]
 
-function participantClass(i) {
+function participantClass(i: number) {
   return badgeColors[i % badgeColors.length]
 }
 
-function statusPillClass(s) {
+function statusPillClass(s: MeetingStatus) {
   if (s === 'completed') {
 return 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/40'
 }
@@ -57,7 +78,7 @@ return 'bg-sky-500/20 text-sky-300 ring-1 ring-sky-500/40'
   return 'bg-zinc-500/25 text-zinc-300 ring-1 ring-zinc-500/40'
 }
 
-function formatPtDate(iso) {
+function formatPtDate(iso: string | null) {
   if (!iso) {
 return '—'
 }
@@ -72,7 +93,7 @@ return s
   return `${d}/${m}/${y}`
 }
 
-const displayedMeetings = computed(() => {
+const displayedMeetings = computed<MeetingItem[]>(() => {
   if (props.tab === 'completed') {
     return props.meetings.filter((m) => m.status === 'completed')
   }
@@ -80,12 +101,12 @@ const displayedMeetings = computed(() => {
   return props.meetings
 })
 
-function meetingsByStatus(status) {
+function meetingsByStatus(status: MeetingStatus) {
   return props.meetings.filter((m) => m.status === status)
 }
 
 const calendarGroups = computed(() => {
-  const map = new Map()
+  const map = new Map<string, MeetingItem[]>()
 
   for (const m of props.meetings) {
     const key = (m.meeting_date || '').slice(0, 7)
@@ -98,17 +119,17 @@ continue
 map.set(key, [])
 }
 
-    map.get(key).push(m)
+    map.get(key)!.push(m)
   }
 
   return [...map.entries()].sort(([a], [b]) => a.localeCompare(b))
 })
 
-function tabHref(t) {
+function tabHref(t: MeetingsTab) {
   return `/reunioes?tab=${encodeURIComponent(t)}`
 }
 
-function tabClass(t) {
+function tabClass(t: MeetingsTab) {
   return [
     'rounded-md px-3 py-1.5 text-sm font-medium transition',
     props.tab === t
@@ -137,7 +158,7 @@ function startCreate() {
   scrollToForm()
 }
 
-function startEdit(m) {
+function startEdit(m: MeetingItem) {
   editingId.value = m.id
   form.title = m.title
   form.meeting_date = (m.meeting_date || '').slice(0, 10)
@@ -172,7 +193,7 @@ function submit() {
   }
 }
 
-function removeMeeting(m) {
+function removeMeeting(m: MeetingItem) {
   if (!window.confirm(`Eliminar "${m.title}"?`)) {
 return
 }
@@ -281,11 +302,7 @@ watch(
         <!-- Kanban -->
         <div v-if="tab === 'kanban'" class="mt-6 grid gap-4 md:grid-cols-3">
           <div
-            v-for="col in [
-              { key: 'planning', label: 'Em planeamento' },
-              { key: 'scheduled', label: 'Agendadas' },
-              { key: 'completed', label: 'Concluídas' },
-            ]"
+            v-for="col in meetingColumns"
             :key="col.key"
             class="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3"
           >

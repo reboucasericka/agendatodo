@@ -3,14 +3,14 @@ import { Head, Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <Head title="bossflowx" />
+    <Head title="AgendaToDo" />
     <div class="flex min-h-screen flex-col bg-gray-100">
         <!-- HEADER -->
         <header class="flex items-center justify-between px-6 py-4">
              <!-- Logo -->
             <div class="flex items-center gap-2">
-                <img src="/images/logo.png" alt="bossflowx Logo" class="h-8 w-auto" />
-                <h1 class="text-xl font-semibold text-gray-800">Boss Flow X</h1>
+                <img src="/images/logo.png" alt="AgendaToDo Logo" class="h-8 w-auto" />
+                <h1 class="text-xl font-semibold text-gray-800">AgendaToDo</h1>
             </div>
 
             <!-- Menu 
@@ -45,7 +45,7 @@ import { Head, Link } from '@inertiajs/vue3';
                     <p
                         class="mx-auto max-w-4xl text-2xl text-gray-700 md:text-3xl"
                     >
-                     O Boss Flow X combina simplicidade e automação para te
+                     O AgendaToDo combina simplicidade e automação para te
                         ajudar a executar mais, com menos esforço.
                     </p>
                 </div>
@@ -63,7 +63,7 @@ import { Head, Link } from '@inertiajs/vue3';
 
         <!-- FOOTER -->
         <footer class="py-6 text-center text-sm text-gray-500">
-            © {{ new Date().getFullYear() }} Boss Flow X. Todos os direitos
+            © {{ new Date().getFullYear() }} AgendaToDo. Todos os direitos
             reservados.
         </footer>
     </div>

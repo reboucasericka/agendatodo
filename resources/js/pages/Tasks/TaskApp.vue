@@ -211,7 +211,7 @@ const isTasksHistoryActive = computed(() => {
       </div>
 
       <div class="px-4 py-3 text-xs text-gray-500">
-        © {{ new Date().getFullYear() }} BossFlowX
+        © {{ new Date().getFullYear() }} AgendaToDo
       </div>
     </aside>
 
